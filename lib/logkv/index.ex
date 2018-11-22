@@ -18,16 +18,16 @@ defmodule LogKV.Index do
 
   ## Examples
 
-  	iex> {:ok, _index} = LogKV.Index.start_link(:empty)
-  	iex> LogKV.Index.update("my_key", 0, 10)
-  	:ok
+    iex> {:ok, _index} = LogKV.Index.start_link(:empty)
+    iex> LogKV.Index.update("my_key", 0, 10)
+    :ok
 
   """
   def update(key, offset, size) do
-    GenServer.call(__MODULE__, {:set, key, offset, size})
+    GenServer.call(__MODULE__, {:update, key, offset, size})
   end
 
-  def handle_call({:set, key, offset, size}, _from, index_map) do
+  def handle_call({:update, key, offset, size}, _from, index_map) do
     {:reply, :ok, Map.put(index_map, key, {offset, size})}
   end
 end
