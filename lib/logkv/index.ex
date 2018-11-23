@@ -3,8 +3,8 @@ defmodule LogKV.Index do
 
   @doc ~S"""
   At the beginning the index will be empty. The first super-simple implementation 
-  doesn't recover the index. For this version we just need one `Writer` and one `Index` and then they
-  both have a name
+  doesn't recover the index. For this version we just need one index process with `LogKV.Index`
+  name.
   """
   def start_link([]) do
     GenServer.start_link(__MODULE__, :empty, name: __MODULE__)
@@ -23,13 +23,13 @@ defmodule LogKV.Index do
 
   ## Examples
 
-    iex> {:ok, _index} = LogKV.Index.start_link([])
-    iex> LogKV.Index.update("my_key", 0, 10)
+    iex> {:ok, index_pid} = LogKV.Index.start_link([])
+    iex> LogKV.Index.update(index_pid, "my_key", 0, 10)
     :ok
 
   """
-  def update(key, offset, size) do
-    GenServer.call(__MODULE__, {:update, key, offset, size})
+  def update(pid, key, offset, size) do
+    GenServer.call(pid, {:update, key, offset, size})
   end
 
   @doc ~S"""
@@ -37,17 +37,17 @@ defmodule LogKV.Index do
 
   ### Examples
 
-    iex> {:ok, _index} = LogKV.Index.start_link([])
-    iex> {:error, :not_found} = LogKV.Index.lookup("not_existing_key")
-    iex> LogKV.Index.update("btc",10,6)
+    iex> {:ok, index_pid} = LogKV.Index.start_link([])
+    iex> {:error, :not_found} = LogKV.Index.lookup(index_pid,"not_existing_key")
+    iex> LogKV.Index.update(index_pid, "btc",10,6)
     :ok
-    iex> LogKV.Index.lookup("btc")
+    iex> LogKV.Index.lookup(index_pid, "btc")
     {:ok, {10, 6}}
 
 
   """
-  def lookup(key) do
-    GenServer.call(__MODULE__, {:lookup, key})
+  def lookup(pid, key) do
+    GenServer.call(pid, {:lookup, key})
   end
 
   def handle_call({:update, key, offset, size}, _from, index_map) do

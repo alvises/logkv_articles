@@ -28,4 +28,6 @@ defmodule LogKV.WriterTest do
       assert not File.exists?(second_log_path)
     end
   end
+
+  # describe "put/3" 
 end
