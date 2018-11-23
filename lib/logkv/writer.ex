@@ -25,4 +25,11 @@ defmodule LogKV.Writer do
   def start_link(log_path) do
     GenServer.start_link(__MODULE, log_path, name: __MODULE__)
   end
+
+  # the state will be %{fd: file_pid, current_offset: 0}. The writer uses the current_offset to 
+  # know the absolute offset and update the index
+  def init(log_path) do
+    fd = File.open!(log_path, [:write, :binary])
+    {:ok, %{fd: fd, current_offset: 0}}
+  end
 end
