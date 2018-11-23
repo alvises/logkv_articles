@@ -6,7 +6,7 @@ defmodule LogKV.Index do
   doesn't recover the index. For this version we just need one `Writer` and one `Index` and then they
   both have a name
   """
-  def start_link(:empty) do
+  def start_link([]) do
     GenServer.start_link(__MODULE__, :empty, name: __MODULE__)
   end
 
@@ -23,7 +23,7 @@ defmodule LogKV.Index do
 
   ## Examples
 
-    iex> {:ok, _index} = LogKV.Index.start_link(:empty)
+    iex> {:ok, _index} = LogKV.Index.start_link([])
     iex> LogKV.Index.update("my_key", 0, 10)
     :ok
 
@@ -37,7 +37,7 @@ defmodule LogKV.Index do
 
   ### Examples
 
-    iex> {:ok, _index} = LogKV.Index.start_link(:empty)
+    iex> {:ok, _index} = LogKV.Index.start_link([])
     iex> {:error, :not_found} = LogKV.Index.lookup("not_existing_key")
     iex> LogKV.Index.update("btc",10,6)
     :ok
