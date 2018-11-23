@@ -21,15 +21,19 @@ defmodule LogKV.Index do
   you have then the guarantee that the next `lookup` message will be able to 
   get the updated offset/size for that key.
 
+  There is a strong coupling here, useful to make this example/implementation simple. 
+  Instead of giving the option, via the interface, of sending the message to a specified process,
+  with this method we can only send messages to the process named `LogKV.Index`.
+
   ## Examples
 
-    iex> {:ok, index_pid} = LogKV.Index.start_link([])
-    iex> LogKV.Index.update(index_pid, "my_key", 0, 10)
+    iex> {:ok, _index_pid} = LogKV.Index.start_link([])
+    iex> LogKV.Index.update("my_key", 0, 10)
     :ok
 
   """
-  def update(pid, key, offset, size) do
-    GenServer.call(pid, {:update, key, offset, size})
+  def update(key, offset, size) do
+    GenServer.call(__MODULE__, {:update, key, offset, size})
   end
 
   @doc ~S"""
@@ -37,17 +41,17 @@ defmodule LogKV.Index do
 
   ### Examples
 
-    iex> {:ok, index_pid} = LogKV.Index.start_link([])
-    iex> {:error, :not_found} = LogKV.Index.lookup(index_pid,"not_existing_key")
-    iex> LogKV.Index.update(index_pid, "btc",10,6)
+    iex> {:ok, _index_pid} = LogKV.Index.start_link([])
+    iex> {:error, :not_found} = LogKV.Index.lookup("not_existing_key")
+    iex> LogKV.Index.update("btc",10,6)
     :ok
-    iex> LogKV.Index.lookup(index_pid, "btc")
+    iex> LogKV.Index.lookup("btc")
     {:ok, {10, 6}}
 
 
   """
-  def lookup(pid, key) do
-    GenServer.call(pid, {:lookup, key})
+  def lookup(key) do
+    GenServer.call(__MODULE__, {:lookup, key})
   end
 
   def handle_call({:update, key, offset, size}, _from, index_map) do
