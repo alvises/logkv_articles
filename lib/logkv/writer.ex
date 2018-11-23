@@ -14,11 +14,13 @@ defmodule LogKV.Writer do
   `Writer` will use the `LogKV.Index` to update the `key`'s `{offset, size}`. You need first to start the
   the `LogKV.Index` process and then you can start the `LogKV.Writer` process.
 
-  Right now, we want to use just one Writer, so we make it uniquely available forcing it's name.
+  Right now, we want to use just one Writer, so we make it uniquely available forcing it's name to __MODULE__, 
+  which is the default option. We keep the options changeble to be able to run multiple tests with multiple writers 
+  in parallel.
 
   """
-  def start_link(log_path) do
-    GenServer.start_link(__MODULE__, log_path, name: __MODULE__)
+  def start_link(log_path, options \\ [name: __MODULE__]) do
+    GenServer.start_link(__MODULE__, log_path, options)
   end
 
   # the state will be %{fd: file_pid, current_offset: 0}. The writer uses the current_offset to 
