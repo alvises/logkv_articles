@@ -16,14 +16,9 @@ defmodule LogKV.Writer do
 
   Right now, we want to use just one Writer, so we make it uniquely available forcing it's name.
 
-    ## Examples
-
-      iex> {:ok, pid} = LogKV.Writer.start_link("tmp.log")
-      iex> File.exists?("tmp.log")
-
   """
   def start_link(log_path) do
-    GenServer.start_link(__MODULE, log_path, name: __MODULE__)
+    GenServer.start_link(__MODULE__, log_path, name: __MODULE__)
   end
 
   # the state will be %{fd: file_pid, current_offset: 0}. The writer uses the current_offset to 

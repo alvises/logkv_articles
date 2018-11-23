@@ -1,15 +1,22 @@
 defmodule LogKV.WriterTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
+
   doctest LogKV.Writer
 
   describe "start_link/1" do
-    test "create the file passed as argument" do
-      tmp_log = Temp.path!()
+    setup do
+      log_path = Temp.path!()
+      on_exit(fn -> File.rm!(log_path) end)
 
-      {:ok, pid} = LogKV.Writer.start_link(tmp_log)
-      assert File.exists?(tmp_log)
-
-      File.rm!(tmp_log)
+      %{log_path: log_path}
     end
+
+    test "create the file passed as argument", %{log_path: log_path} do
+      {:ok, _pid} = LogKV.Writer.start_link(log_path)
+      assert File.exists?(log_path)
+    end
+
+    # test "only one writer" do
+    # end
   end
 end
