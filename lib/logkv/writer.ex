@@ -38,7 +38,7 @@ defmodule LogKV.Writer do
   and the index is updated.
 
   """
-  def put(key, value) when is_binary(key) and is_binary(value) do
+  def put(key, value) do
     GenServer.call(__MODULE__, {:put, key, value})
   end
 
