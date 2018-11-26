@@ -19,8 +19,8 @@ defmodule LogKV.Writer do
   in parallel.
 
   """
-  def start_link(log_path, options \\ [name: __MODULE__]) do
-    GenServer.start_link(__MODULE__, log_path, options)
+  def start_link(log_path) do
+    GenServer.start_link(__MODULE__, log_path, name: __MODULE__)
   end
 
   # the state will be %{fd: file_pid, current_offset: 0}. The writer uses the current_offset to 
@@ -38,12 +38,12 @@ defmodule LogKV.Writer do
   and the index is updated.
 
   """
-  def put(pid, key, value) when is_binary(value) do
-    GenServer.call(pid, {:put, key, value})
+  def put(key, value) when is_binary(key) and is_binary(value) do
+    GenServer.call(__MODULE__, {:put, key, value})
   end
 
   def handle_call({:put, key, value}, _from, %{fd: fd, current_offset: current_offset} = state) do
-    # no particular error handling, we are just experimenting.
+    # no particular error handling here, we are just experimenting.
     :ok = IO.binwrite(fd, value)
     size = byte_size(value)
 

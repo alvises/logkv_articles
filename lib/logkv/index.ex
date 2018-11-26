@@ -6,7 +6,7 @@ defmodule LogKV.Index do
   doesn't recover the index. For this version we just need one index process with `LogKV.Index`
   name.
   """
-  def start_link([]) do
+  def start_link(_options \\ []) do
     GenServer.start_link(__MODULE__, :empty, name: __MODULE__)
   end
 
