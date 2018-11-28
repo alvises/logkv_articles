@@ -7,7 +7,7 @@ defmodule LogKV.Reader do
 
   @doc ~S"""
   You need first to start `LogKV.Index` and `LogKV.Writer` in this order. 
-  The reader doens't have the name fixed, because we can have multiple readers for one single log-file.
+  The reader doesn't have the name fixed, because we can have multiple readers for one single log-file.
   """
 
   def start_link(log_path) do
