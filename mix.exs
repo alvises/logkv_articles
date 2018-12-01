@@ -21,8 +21,6 @@ defmodule LogKV.MixProject do
 
   # Run "mix help deps" to learn about dependencies.
   defp deps do
-    [
-      {:temp, "~> 0.4", only: [:test]}
-    ]
+    []
   end
 end
