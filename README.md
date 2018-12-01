@@ -1,6 +1,8 @@
+Part 1
+===
 # LogKV
 
-Code of the first implementation explained in the article [Build a simple persistent key-value store in Elixir, using logs (Part 1)](https://www.poeticoding.com/build-a-simple-persistent-key-value-store-in-elixir-using-logs-part-1)
+Code of the first implementation explained in the article [Build a simple persistent key-value store in Elixir, using logs - Part 1](https://www.poeticoding.com/build-a-simple-persistent-key-value-store-in-elixir-using-logs-part-1)
 
 > _The code in this article is heavily inspired from the concepts amazingly explained in the book_ [Designing Data-Intensive Applications](https://dataintensive.net) _by_ [_Martin Kleppmann_](https://medium.com/u/13be457aed12)_._
 
@@ -34,3 +36,13 @@ There are obviously different issues like
 * The log grows indefinitely keeping the old values. We need to first put a cap to the log size and to get rid of the old values. This leads to important concepts like **segments** and  **compaction**.
 
 In the next parts we will dig into these issues expanding the implementation of our storage engine.
+
+
+
+Part 2
+===
+
+[Build a simple persistent key-value store in Elixir, using logs - Part 2](https://www.poeticoding.com/build-a-simple-persistent-key-value-store-in-elixir-using-logs-part-2)
+
+In this second part we'll do a step further, making both keys and values persistent, to be able to recover the Index in the case of a failure.  We we also see how to start the Index, Writer and Reader inside a supervision tree.
+
