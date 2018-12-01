@@ -48,17 +48,17 @@ defmodule LogKV.Writer do
   end
 
   def handle_call({:put, key, value}, _from, %{fd: fd, current_offset: current_offset} = state) do
-    # no particular error handling here, we are just experimenting.
-    :ok = IO.binwrite(fd, value)
-    size = byte_size(value)
+    timestamp = :os.system_time(:millisecond)
+    {data, _key_size, value_size} = kv_to_binary(timestamp, key, value)
 
-    LogKV.Index.update(key, current_offset, size)
+    :ok = IO.binwrite(fd, data)
 
-    new_state = %{state | current_offset: current_offset + size}
-    {:reply, {:ok, {current_offset, size}}, new_state}
+    LogKV.Index.update(key, current_offset, value_size)
+
+    new_state = %{state | current_offset: current_offset + value_size}
+    {:reply, {:ok, {current_offset, value_size}}, new_state}
   end
 
-  
   @doc ~S"""
   Part-2: Tansforms the integer representing the size of the key and the value in bytes.
   The size of the key is represented by a 16bit unsigned integer,  this means can be maximum around 65kb, which for this example is more then enough.
@@ -69,36 +69,47 @@ defmodule LogKV.Writer do
 
     ## Examples
 
-      iex> {_data, key_size, value_size} = LogKV.Writer.kv_to_binary(:os.system_time(:millisecond), "key", "value")
+      iex> {data, key_size, value_rel_offset, value_size} = LogKV.Writer.kv_to_binary(:os.system_time(:millisecond), "key", "value")
+      iex> byte_size(data)
+      22
       iex> key_size
-      <<0, 3>>
+      3
+      iex> value_rel_offset
+      17
       iex> value_size
-      <<0, 0, 0, 5>>
+      5
 
   """
-  def kv_to_binary(timestamp,key, value) do
-
-    #conversion of an integer to big endian 16bit unisigned integer. 
+  def kv_to_binary(timestamp, key, value) do
+    # conversion of an integer to big endian 16bit unisigned integer. 
     # 
     # << our_int :: conversion from integer to binary >>
 
     # timestamp = :os.system_time(:millisecond)
     timestamp_data = <<timestamp::big-unsigned-integer-size(64)>>
 
-    key_size = <<byte_size(key)::big-unsigned-integer-size(16)>>
-    value_size = <<byte_size(value)::big-unsigned-integer-size(32)>>
+    key_size = byte_size(key)
+    value_size = byte_size(value)
+
+    key_size_data = <<key_size::big-unsigned-integer-size(16)>>
+    value_size_data = <<value_size::big-unsigned-integer-size(32)>>
 
     # sizes_data is a 6bytes binary with first 2 bytes the key size and then 4 bytes for the value size.
-    sizes_data = <<key_size::binary, value_size::binary>>
+    sizes_data = <<key_size_data::binary, value_size_data::binary>>
 
-    #kv_data is just the concatenation of the key and value
+    # kv_data is just the concatenation of the key and value
     kv_data = <<key::binary, value::binary>>
 
-    #we then create a single entry which comprehends timestamp, key and values sizes, key and the value.
+    # we then create a single entry which comprehends timestamp, key and values sizes, key and the value.
     data = <<timestamp_data::binary, sizes_data::binary, kv_data::binary>>
-    
-    #we then return a tuple with the entry data, key size and value size
-    {data, key_size, value_size}
-  end
 
+    # we then return a tuple with the entry data, key size, value relative offset, which is where the value is located in *data* binary, and value size.
+    # 8 bytes of timesamp
+    # 2 bytes of key size 
+    # 4 bytes of value size
+    # key_size bytes of key
+    value_rel_offset = byte_size(timestamp_data) + byte_size(sizes_data) + key_size
+
+    {data, key_size, value_rel_offset, value_size}
+  end
 end
