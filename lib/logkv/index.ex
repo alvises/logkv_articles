@@ -6,12 +6,46 @@ defmodule LogKV.Index do
   doesn't recover the index. For this version we just need one index process with `LogKV.Index`
   name.
   """
-  def start_link(_options \\ []) do
+  def start_link(:empty) do
     GenServer.start_link(__MODULE__, :empty, name: __MODULE__)
+  end
+
+  def start_link(log_path) when is_binary(log_path) do
+    GenServer.start_link(__MODULE__, log_path, name: __MODULE__)
   end
 
   # empty index
   def init(:empty), do: {:ok, %{}}
+
+  @doc ~S"""
+  Part-2: Reads the log-file and rebuilds the index.
+  """
+  def init(log_path) do
+    with {:ok, fd} <- File.open(log_path, [:read, :binary]),
+         {_current_offset, offsets} = load_offsets(fd) do
+      File.close(fd)
+      {:ok, offsets}
+    else
+      _ -> init(:empty)
+    end
+  end
+
+  defp load_offsets(fd, offsets \\ %{}, current_offset \\ 0) do
+    :file.position(fd, current_offset)
+
+    with <<_timestamp::big-unsigned-integer-size(64)>> <- IO.binread(fd, 8),
+         <<key_size::big-unsigned-integer-size(16)>> <- IO.binread(fd, 2),
+         <<value_size::big-unsigned-integer-size(32)>> <- IO.binread(fd, 4),
+         key <- IO.binread(fd, key_size) do
+      # updating the current_offset to jump at the beginning of the next entry
+      value_abs_offset = current_offset + 14 + key_size
+      offsets = Map.put(offsets, key, {value_abs_offset, value_size})
+      IO.puts("#{key_size}")
+      load_offsets(fd, offsets, value_abs_offset + value_size)
+    else
+      :eof -> {current_offset, offsets}
+    end
+  end
 
   @doc ~S"""
   Updates the index for a specific `key`. It saves the `offset` and `size` 

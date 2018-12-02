@@ -48,15 +48,14 @@ defmodule LogKV.Writer do
   end
 
   def handle_call({:put, key, value}, _from, %{fd: fd, current_offset: current_offset} = state) do
-    timestamp = :os.system_time(:millisecond)
-    {data, _key_size, value_size} = kv_to_binary(timestamp, key, value)
-
+    {data, _key_size, value_rel_offset, value_size} = kv_to_binary(key, value)
     :ok = IO.binwrite(fd, data)
 
-    LogKV.Index.update(key, current_offset, value_size)
+    value_offset = current_offset + value_rel_offset
+    LogKV.Index.update(key, value_offset, value_size)
 
-    new_state = %{state | current_offset: current_offset + value_size}
-    {:reply, {:ok, {current_offset, value_size}}, new_state}
+    new_state = %{state | current_offset: value_offset + value_size}
+    {:reply, {:ok, {value_offset, value_size}}, new_state}
   end
 
   @doc ~S"""
@@ -80,7 +79,8 @@ defmodule LogKV.Writer do
       5
 
   """
-  def kv_to_binary(timestamp, key, value) do
+  defp kv_to_binary(key, value) do
+    timestamp = :os.system_time(:millisecond)
     # conversion of an integer to big endian 16bit unisigned integer. 
     # 
     # << our_int :: conversion from integer to binary >>
