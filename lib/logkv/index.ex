@@ -18,7 +18,7 @@ defmodule LogKV.Index do
   def init(:empty), do: {:ok, %{}}
 
   @doc ~S"""
-  Part-2: Reads the log-file and rebuilds the index.
+  Part-2: Recovers the inde
   """
   def init(log_path) do
     with {:ok, fd} <- File.open(log_path, [:read, :binary]),
@@ -39,8 +39,9 @@ defmodule LogKV.Index do
          key <- IO.binread(fd, key_size) do
       # updating the current_offset to jump at the beginning of the next entry
       value_abs_offset = current_offset + 14 + key_size
+
       offsets = Map.put(offsets, key, {value_abs_offset, value_size})
-      IO.puts("#{key_size}")
+
       load_offsets(fd, offsets, value_abs_offset + value_size)
     else
       :eof -> {current_offset, offsets}
