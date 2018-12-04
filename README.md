@@ -44,5 +44,11 @@ Part 2
 
 [Build a simple persistent key-value store in Elixir, using logs - Part 2](https://www.poeticoding.com/build-a-simple-persistent-key-value-store-in-elixir-using-logs-part-2)
 
-In this second part we'll do a step further, making both keys and values persistent, to be able to recover the Index in the case of a failure.  We we also see how to start the Index, Writer and Reader inside a supervision tree.
+In this part we'll do a step further, making both keys and values persistent, being able to recover the Index in the case of a failure.  
 
+Since the keys are only kept in memory by the Index process, if the Index (or the whole engine) crashes we loose the keys! At least we have stored the values in log-file, right? Not really, since without the Index we don't know where a value starts and ends.
+
+We need to store both keys and values in the log-file. In this part we see how to change the implementation of the Writer and the Index modules, to make the index recoverable.
+
+### Wrap Up
+<iframe width="560" height="315" src="https://www.youtube.com/embed/wy9aQ2KxBnQ" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
