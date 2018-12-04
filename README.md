@@ -51,4 +51,4 @@ Since the keys are only kept in memory by the Index process, if the Index (or th
 We need to store both keys and values in the log-file. In this part we see how to change the implementation of the Writer and the Index modules, to make the index recoverable.
 
 ### Wrap Up
-<iframe width="560" height="315" src="https://www.youtube.com/embed/wy9aQ2KxBnQ" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+[![Index Recovery Video](https://img.youtube.com/vi/wy9aQ2KxBnQ/0.jpg)](https://www.youtube.com/watch?v=wy9aQ2KxBnQ)
