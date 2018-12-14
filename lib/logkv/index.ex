@@ -2,7 +2,7 @@ defmodule LogKV.Index do
   use GenServer
 
   @doc ~S"""
-  At the beginning the index will be empty. The first super-simple implementation 
+  At the beginning the index will be empty. The first super-simple implementation
   doesn't recover the index. For this version we just need one index process with `LogKV.Index`
   name.
   """
@@ -49,20 +49,20 @@ defmodule LogKV.Index do
   end
 
   @doc ~S"""
-  Updates the index for a specific `key`. It saves the `offset` and `size` 
+  Updates the index for a specific `key`. It saves the `offset` and `size`
   of the value in the log file.
 
-  The update is made doing a `GenServer.call`, so it's synchronous and 
-  you have then the guarantee that the next `lookup` message will be able to 
+  The update is made doing a `GenServer.call`, so it's synchronous and
+  you have then the guarantee that the next `lookup` message will be able to
   get the updated offset/size for that key.
 
-  There is a strong coupling here, useful to make this example/implementation simple. 
+  There is a strong coupling here, useful to make this example/implementation simple.
   Instead of giving the option, via the interface, of sending the message to a specified process,
   with this method we can only send messages to the process named `LogKV.Index`.
 
   ## Examples
 
-    iex> {:ok, _index_pid} = LogKV.Index.start_link([])
+    iex> {:ok, _index_pid} = LogKV.Index.start_link(:empty)
     iex> LogKV.Index.update("my_key", 0, 10)
     :ok
 
@@ -76,7 +76,7 @@ defmodule LogKV.Index do
 
   ### Examples
 
-    iex> {:ok, _index_pid} = LogKV.Index.start_link([])
+    iex> {:ok, _index_pid} = LogKV.Index.start_link(:empty)
     iex> {:error, :not_found} = LogKV.Index.lookup("not_existing_key")
     iex> LogKV.Index.update("btc",10,6)
     :ok
