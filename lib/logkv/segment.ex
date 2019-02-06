@@ -11,10 +11,20 @@ defmodule LogKV.Segment do
   @enforce_keys [:id, :active]
   defstruct [:id, :active, :current_offset, :fd_w]
 
-  def new(id\\0) do
+  def new(id \\ 0) do
     %Segment{id: id, active: true, current_offset: 0}
   end
 
+  def put(%Segment{fd_w: fd_w}, key, value) do
+    {data, _key_size, value_rel_offset, value_size} = kv_to_binary(key, value)
+    :ok = IO.binwrite(fd_w, data)
+
+    value_offset = current_offset + value_rel_offset
+    LogKV.Index.update(key, value_offset, value_size)
+
+    new_state = %{state | current_offset: value_offset + value_size}
+    {:reply, {:ok, {value_offset, value_size}}, new_state}
+  end
 
   @doc ~S"""
   Part-3: Tansforms the integer representing the size of the key and the value in bytes.
@@ -26,7 +36,7 @@ defmodule LogKV.Segment do
 
     ## Examples
 
-      iex> {data, key_size, value_rel_offset, value_size} = LogKV.Segment.kv_to_binary(:os.system_time(:millisecond), "key", "value")
+      iex> {data, key_size, value_rel_offset, value_size} = LogKV.Segment.kv_to_binary("key", "value")
       iex> byte_size(data)
       22
       iex> key_size
@@ -37,12 +47,10 @@ defmodule LogKV.Segment do
       5
 
   """
-  def kv_to_binary(timestamp, key, value) do
+  def kv_to_binary(key, value, timestamp \\ :os.system_time(:millisecond)) do
     # conversion of an integer to big endian 16bit unisigned integer.
     #
     # << our_int :: conversion from integer to binary >>
-
-    # timestamp = :os.system_time(:millisecond)
     timestamp_data = <<timestamp::big-unsigned-integer-size(64)>>
 
     key_size = byte_size(key)
@@ -69,5 +77,4 @@ defmodule LogKV.Segment do
 
     {data, key_size, value_rel_offset, value_size}
   end
-
 end
