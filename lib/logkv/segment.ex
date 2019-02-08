@@ -15,15 +15,15 @@ defmodule LogKV.Segment do
     %Segment{id: id, active: true, current_offset: 0}
   end
 
-  def put(%Segment{fd_w: fd_w}, key, value) do
+  def put(%Segment{fd_w: fd_w, current_offset: current_offset}, key, value) do
     {data, _key_size, value_rel_offset, value_size} = kv_to_binary(key, value)
     :ok = IO.binwrite(fd_w, data)
 
     value_offset = current_offset + value_rel_offset
     LogKV.Index.update(key, value_offset, value_size)
 
-    new_state = %{state | current_offset: value_offset + value_size}
-    {:reply, {:ok, {value_offset, value_size}}, new_state}
+    # new_state = %{state | current_offset: value_offset + value_size}
+    # {:reply, {:ok, {value_offset, value_size}}, new_state}
   end
 
   @doc ~S"""
@@ -34,15 +34,17 @@ defmodule LogKV.Segment do
   *big-unsigned-integer-size(16)* means the integer is converted to a binary of 2bytes big endian order.
   If you want to know what endianess is, please look here: https://en.wikipedia.org/wiki/Endianness
 
+  The first 4 bytes of the data are the CRC-32. After a application/computer crash, loading back the log-file we check if data was corrupted
+
     ## Examples
 
-      iex> {data, key_size, value_rel_offset, value_size} = LogKV.Segment.kv_to_binary("key", "value")
+      iex> {data, key_size, value_rel_offset, value_size, _crc} = LogKV.Segment.kv_to_binary("key", "value")
       iex> byte_size(data)
-      22
+      26
       iex> key_size
       3
       iex> value_rel_offset
-      17
+      21
       iex> value_size
       5
 
@@ -68,13 +70,19 @@ defmodule LogKV.Segment do
     # we then create a single entry which comprehends timestamp, key and values sizes, key and the value.
     data = <<timestamp_data::binary, sizes_data::binary, kv_data::binary>>
 
+    crc = :erlang.crc32(data)
+
+    crc_size = 4
+    data_with_crc = <<crc::big-unsigned-integer-size(32), data::binary>>
+
     # we then return a tuple with the entry data, key size, value relative offset, which is where the value is located in *data* binary, and value size.
+    # 4 bytes of CRC-32
     # 8 bytes of timesamp
     # 2 bytes of key size
     # 4 bytes of value size
     # key_size bytes of key
-    value_rel_offset = byte_size(timestamp_data) + byte_size(sizes_data) + key_size
+    value_rel_offset = byte_size(timestamp_data) + byte_size(sizes_data) + key_size + crc_size
 
-    {data, key_size, value_rel_offset, value_size}
+    {data_with_crc, key_size, value_rel_offset, value_size, crc}
   end
 end

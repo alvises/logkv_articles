@@ -10,12 +10,22 @@ defmodule LogKV.SegmentTest do
   end
 
   describe "kv_to_binary" do
-    test "timestamp in the first 8 bytes, uint64 big-endian" do
+
+    test "CRC-32 checksum in first 4 bytes uint64 big-endian" do
+      {data, _, _, _ , _} = Segment.kv_to_binary("key", "value")
+
+      <<crc::big-unsigned-integer-size(32), kv_data::binary>> = data
+
+      assert crc == :erlang.crc32(kv_data)
+    end
+
+    test "timestamp in 8 bytes uint64 big-endian, after CRC-32" do
       # milliseconds
       timestamp = 1_544_745_758_000
-      {data, _, _, _} = Segment.kv_to_binary("key", "value", timestamp)
+      {data, _, _, _,crc} = Segment.kv_to_binary("key", "value", timestamp)
 
-      assert <<^timestamp::big-unsigned-integer-size(64), _::binary>> = data
+      assert <<^crc::big-unsigned-integer-size(32),^timestamp::big-unsigned-integer-size(64), _::binary>> = data
     end
+
   end
 end
